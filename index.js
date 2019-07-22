@@ -60,9 +60,42 @@ var presentGrids = sortedDates.map(function (date) {
 console.log("Present grids", presentGrids)
 
 // Given missing dates, determine and add their grids
+var newGrids = []
+while (missingDates.length > 0) {
+    for (var i = 0; i < missingDates.length; i++) {
+        var missingDate = missingDates[i]
+        var topCandidate = presentGrids.find(function (date) { return parseInt(date.text) === (parseInt(missingDate) - 7)})
+        var bottomCandidate = presentGrids.find(function (date) { return parseInt(date.text) === (parseInt(missingDate) + 7)})
+        var leftCandidate = presentGrids.find(function (date) { return parseInt(date.text) === (parseInt(missingDate) - 1)})
+        var rightCandidate = presentGrids.find(function (date) { return parseInt(date.text) === (parseInt(missingDate) + 1)})
 
+        if (topCandidate) {
+            presentGrids.push({
+                text: missingDate,
+                topLeft: [topCandidate.topLeft[0], topCandidate.topLeft[1] + height],
+                topRight: [topCandidate.topRight[0], topCandidate.topRight[1] + height],
+                bottomRight: [topCandidate.bottomRight[0], topCandidate.bottomRight[1] + height],
+                bottomLeft: [topCandidate.bottomLeft[0], topCandidate.bottomLeft[1] + height]
+            })
+        } else if (bottomCandidate) {
+            presentGrids.push({
+                text: missingDate,
+                topLeft: [bottomCandidate.topLeft[0], bottomCandidate.topLeft[1] - height],
+                topRight: [bottomCandidate.topRight[0], bottomCandidate.topRight[1] - height],
+                bottomRight: [bottomCandidate.bottomRight[0], bottomCandidate.bottomRight[1] - height],
+                bottomLeft: [bottomCandidate.bottomLeft[0], bottomCandidate.bottomLeft[1] - height]
+            })
+        } else if (leftCandidate) {
+            // Don't do this as there's no guarantee this is correct
+        } else if (rightCandidate) {
+            // Don't do this as there's no guarantee this is correct
+        }
+    }
+    var presentNumbers = presentGrids.map(function (grid) { return grid.text })
+    missingDates = dateNumbers.filter(function (dateNumber) { return !presentNumbers.includes(dateNumber) })
+}
 
-// Draw existing grids
+// Draw existing grids (TODO demo this by drawing grids at different stages of the algo)
 var gridsToDraw = presentGrids
 drawGrids(gridsToDraw)
 
