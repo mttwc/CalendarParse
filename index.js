@@ -9,4 +9,4 @@ for (var i = 1; i <= 31; i++) {
 var dates = words.filter(function (word) { return word.text in dateNumbers })
 var sortedDates = dates.sort(function (a, b) { return parseInt(a.text) - parseInt(b.text) })
 
-console.log(sortedDates)
+console.log("Recognized dates", sortedDates)
