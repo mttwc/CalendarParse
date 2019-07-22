@@ -9,7 +9,6 @@ for (var i = 1; i <= 31; i++) {
 }
 var dates = words.filter(function (word) { return word.text in dateNumbers })
 var sortedDates = getNonDuplicateDates(dates.sort(function (a, b) { return parseInt(a.text) - parseInt(b.text) }))
-
 console.log("Recognized dates", sortedDates)
 
 // Try and get grid dimensions
@@ -17,6 +16,29 @@ var width = getGridWidth(sortedDates)
 console.log("Width", width)
 var height = getGridHeight(sortedDates)
 console.log("Height", height)
+
+// Remove dates that we heuristically detect are in incorrect locations (e.g., false positives)
+var datesToRemove = []
+for (var i = 0; i < sortedDates.length; i++) {
+    var currentDate = sortedDates[i]
+    var topCandidate = sortedDates.find(function (date) { return parseInt(date.text) === (parseInt(currentDate.text) - 7)})
+    var bottomCandidate = sortedDates.find(function (date) { return parseInt(date.text) === (parseInt(currentDate.text) + 7)})
+    var leftCandidate = sortedDates.find(function (date) { return parseInt(date.text) === (parseInt(currentDate.text) - 1)})
+    var rightCandidate = sortedDates.find(function (date) { return parseInt(date.text) === (parseInt(currentDate.text) + 1)})
+
+    if (topCandidate) {
+        var dist = parseInt(currentDate.boundingBox[3]) - parseInt(topCandidate.boundingBox[3]) - height
+        if (Math.abs(dist) > 40) {
+            datesToRemove.push(currentDate.text)
+            datesToRemove.push(topCandidate.text)
+        }
+    }
+
+    // TODO Don't use bottom, left, right for now. This is good enough for demo.
+}
+console.log("Dates to remove", datesToRemove)
+sortedDates = sortedDates.filter(function (date) { return !datesToRemove.includes(date.text)})
+console.log("Dates with bad dates removed", sortedDates)
 
 // Get missing dates
 var presentDates = sortedDates.map(function (date) { return date.text })
@@ -37,17 +59,12 @@ var presentGrids = sortedDates.map(function (date) {
 })
 console.log("Present grids", presentGrids)
 
-// Draw existing grids
-var canvas = document.getElementById("canvas")
-var context = canvas.getContext("2d")
-for (var i = 0; i < presentGrids.length; i++) {
-    var grid = presentGrids[i]
-    context.rect(grid.topLeft[0], grid.topLeft[1], width, height)
-    context.stroke()
+// Given missing dates, determine and add their grids
 
-    context.font = "100px Arial"
-    context.strokeText(grid.text, grid.topLeft[0], grid.topLeft[1])
-}
+
+// Draw existing grids
+var gridsToDraw = presentGrids
+drawGrids(gridsToDraw)
 
 function getNonDuplicateDates(sortedDatesInner) {
     var singles = []
@@ -95,4 +112,17 @@ function getGridHeight(sortedDatesInner) {
     }
     // Median
     return result[Math.round(result.length / 2)]
+}
+
+function drawGrids(gridsInner) {
+    var canvas = document.getElementById("canvas")
+    var context = canvas.getContext("2d")
+    for (var i = 0; i < gridsInner.length; i++) {
+        var grid = gridsInner[i]
+        context.rect(grid.topLeft[0], grid.topLeft[1], width, height)
+        context.stroke()
+
+        context.font = "100px Arial"
+        context.strokeText(grid.text, grid.topLeft[0], grid.topLeft[1])
+    }
 }
