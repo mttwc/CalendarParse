@@ -99,6 +99,54 @@ while (missingDates.length > 0) {
 var gridsToDraw = presentGrids
 drawGrids(gridsToDraw)
 
+// Get words TODO many false positives here, we need to fix
+var nonNumberWords = words.filter(function (word) { return !dateNumbers.includes(word.text) })
+nonNumberWords = nonNumberWords.map(function(word) {
+    return {
+        text: word.text,
+        topLeft: [word.boundingBox[0], word.boundingBox[1]],
+        topRight: [word.boundingBox[2], word.boundingBox[3]],
+        bottomRight: [word.boundingBox[4], word.boundingBox[5]],
+        bottomLeft: [word.boundingBox[6], word.boundingBox[7]],
+    }
+})
+drawWords(nonNumberWords)
+
+// For each word, determine the grid it belongs to (i.e., the most shared area)
+var wordsInGrids = []
+for (var i = 0; i < nonNumberWords.length; i++) {
+    var word = nonNumberWords[i]
+    var wordArea = Math.abs((word.topRight[0] - word.topLeft[0]) * (word.bottomRight[1] - word.topRight[1]))
+
+    var winningGrid = null
+    for (var j = 0; j < presentGrids.length; j++) {
+        var grid = presentGrids[j]
+        var gridArea = Math.abs(grid.topLeft[0] - grid.topRight[0]) * Math.abs(grid.topLeft[1] - grid.bottomRight[1])
+
+        var intersect = getIntersectingRectangle(
+            { x1: word.topLeft[0], y1: word.topLeft[1], x2: word.bottomRight[0], y2: word.bottomRight[1]},
+            { x1: grid.topLeft[0], y1: grid.topLeft[1], x2: grid.bottomRight[0], y2: grid.bottomRight[1]})
+
+        if (intersect !== false) {
+            var area = Math.abs((intersect.x2 - intersect.x1) * (intersect.y2 - intersect.y1))
+            if (!winningGrid) {
+                winningGrid = { grid: grid, area: area}
+            } else if (winningGrid.area < area) {
+                winningGrid = { grid: grid, area: area}
+            }
+        }
+    }
+    if (winningGrid) {
+        wordsInGrids.push({ word: word.text, winningGrid: winningGrid.grid.text })
+    }
+}
+
+// TODO some missing words
+console.log("wordsInGrids", wordsInGrids)
+var presentWords = wordsInGrids.map(function (word) { return word.word })
+var missingWords = nonNumberWords.filter(function (word) { return !presentWords.includes(word.text)})
+console.log("missingWords", missingWords)
+
 function getNonDuplicateDates(sortedDatesInner) {
     var singles = []
     var dateTextOnly = sortedDatesInner.map(function (date) { return date.text })
@@ -157,5 +205,41 @@ function drawGrids(gridsInner) {
 
         context.font = "100px Arial"
         context.strokeText(grid.text, grid.topLeft[0], grid.topLeft[1])
+    }
+}
+
+function drawWords(wordsInner) {
+    var canvas = document.getElementById("canvas")
+    var context = canvas.getContext("2d")
+    // Draw word
+    for (var i = 0; i < wordsInner.length; i++) {
+        var word = wordsInner[i]
+        context.font = "30px Arial"
+        context.strokeText(word.text, word.bottomLeft[0], word.bottomLeft[1])
+    }
+
+    // Draw bounding box
+    for (var i = 0; i < wordsInner.length; i++) {
+        var word = wordsInner[i]
+        context.rect(word.topLeft[0], word.topLeft[1],
+            word.topRight[0] - word.topLeft[0], word.bottomRight[1] - word.topRight[1])
+        context.stroke()
+    }
+}
+
+function getIntersectingRectangle(r1, r2) {  
+    var comparator = (a, b) => { return a - b } 
+    [r1, r2] = [r1, r2].map(r => {
+      return {x: [r.x1, r.x2].sort(comparator), y: [r.y1, r.y2].sort(comparator)}
+    });
+  
+    var noIntersect = r2.x[0] > r1.x[1] || r2.x[1] < r1.x[0] ||
+                        r2.y[0] > r1.y[1] || r2.y[1] < r1.y[0]
+  
+    return noIntersect ? false : {
+      x1: Math.max(r1.x[0], r2.x[0]), // _[0] is the lesser,
+      y1: Math.max(r1.y[0], r2.y[0]), // _[1] is the greater
+      x2: Math.min(r1.x[1], r2.x[1]),
+      y2: Math.min(r1.y[1], r2.y[1])
     }
 }
