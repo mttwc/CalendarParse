@@ -272,6 +272,7 @@ function drawWords(wordsInner) {
     }
 }
 
+// https://codereview.stackexchange.com/questions/185323/find-the-intersect-area-of-two-overlapping-rectangles
 function getIntersectingRectangle(r1, r2) {  
     var comparator = (a, b) => { return a - b } 
     [r1, r2] = [r1, r2].map(r => {
