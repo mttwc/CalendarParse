@@ -143,8 +143,8 @@ for (var i = 0; i < nonNumberWords.length; i++) {
 
 console.log("Words in grids", wordsInGrids)
 var presentWords = wordsInGrids.map(function (word) { return word.word.text })
-var missingWords = nonNumberWords.filter(function (word) { return !presentWords.includes(word.text)})
-console.log("Words not in grids", missingWords)
+var wordsNotInGrids = nonNumberWords.filter(function (word) { return !presentWords.includes(word.text)})
+console.log("Words not in grids", wordsNotInGrids)
 
 // Create a mapping from grid to collections of words
 var gridToWordsMap = {}
@@ -190,6 +190,23 @@ for (var key in gridToWordsMap) {
     })
 }
 console.log("Sorted words in grids", sortedGridToWordsMap)
+
+// Get month and year
+var months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+var yearRegex = /^\d\d\d\d$/ // lol
+var wordsNotInGridsWordsOnly = wordsNotInGrids.map(function(word) { return word.text})
+for (var word of wordsNotInGridsWordsOnly) {
+    if (yearRegex.test(word)) {
+        console.log("Year is", word)
+        break;
+    }
+}
+for (var word of wordsNotInGridsWordsOnly) {
+    if (months.includes(word.toUpperCase())) {
+        console.log("Month is", word.toUpperCase())
+        break;
+    }
+}
 
 
 function getNonDuplicateDates(sortedDatesInner) {
