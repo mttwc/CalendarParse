@@ -141,11 +141,10 @@ for (var i = 0; i < nonNumberWords.length; i++) {
     }
 }
 
-// TODO some missing words
-console.log("wordsInGrids", wordsInGrids)
+console.log("Words in grids", wordsInGrids)
 var presentWords = wordsInGrids.map(function (word) { return word.word })
 var missingWords = nonNumberWords.filter(function (word) { return !presentWords.includes(word.text)})
-console.log("missingWords", missingWords)
+console.log("Words not in grids", missingWords)
 
 function getNonDuplicateDates(sortedDatesInner) {
     var singles = []
