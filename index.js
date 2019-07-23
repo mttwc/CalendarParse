@@ -137,14 +137,60 @@ for (var i = 0; i < nonNumberWords.length; i++) {
         }
     }
     if (winningGrid) {
-        wordsInGrids.push({ word: word.text, winningGrid: winningGrid.grid.text })
+        wordsInGrids.push({ word: word, winningGrid: winningGrid.grid.text })
     }
 }
 
 console.log("Words in grids", wordsInGrids)
-var presentWords = wordsInGrids.map(function (word) { return word.word })
+var presentWords = wordsInGrids.map(function (word) { return word.word.text })
 var missingWords = nonNumberWords.filter(function (word) { return !presentWords.includes(word.text)})
 console.log("Words not in grids", missingWords)
+
+// Create a mapping from grid to collections of words
+var gridToWordsMap = {}
+for (var i = 0; i < wordsInGrids.length; i++) {
+    var wordInGrid = wordsInGrids[i]
+    if (!gridToWordsMap[wordInGrid.winningGrid]) {
+        gridToWordsMap[wordInGrid.winningGrid] = []
+    }
+    gridToWordsMap[wordInGrid.winningGrid].push(wordInGrid)
+}
+console.log("Grid to words mapping", gridToWordsMap)
+
+var wordBoundingBoxComparator = (word1, word2) => {
+    word1 = word1.word
+    word2 = word2.word
+
+    var WORD_1_FIRST = -1
+    var WORD_2_FIRST = 1
+
+    if (word1.bottomRight[1] < word2.topRight[1]) {
+        return WORD_1_FIRST
+    }
+
+    if (word2.bottomRight[1] < word1.topRight[1]) {
+        return WORD_2_FIRST
+    }
+
+    if (word1.topRight[0] < word2.topLeft[0]) {
+        return WORD_1_FIRST
+    }
+
+    if (word2.topRight[0] < word1.topLeft[0]) {
+        return WORD_2_FIRST
+    }
+
+    return word1.topLeft[0] - word2.topLeft[0]
+}
+var sortedGridToWordsMap = {}
+for (var key in gridToWordsMap) {
+    var unsorted = gridToWordsMap[key]
+    sortedGridToWordsMap[key] = unsorted.sort(wordBoundingBoxComparator).map(function(word) {
+        return word.word.text
+    })
+}
+console.log("Sorted words in grids", sortedGridToWordsMap)
+
 
 function getNonDuplicateDates(sortedDatesInner) {
     var singles = []
